@@ -4,10 +4,12 @@ use mini_tokio::{Delay, MiniTokio};
 
 fn main() {
     let mut mini_tokio = MiniTokio::new();
-    mini_tokio.spawn(async {
-        let delay = Delay::after(Duration::from_secs(1));
-        let out = delay.await;
-        println!("delay output: {}", out);
-    });
+    for i in 1..=3 {
+        mini_tokio.spawn(async move {
+            let delay = Delay::after(Duration::from_secs(i));
+            let out = delay.await;
+            println!("delay output of {}: {}", i, out);
+        });
+    }
     mini_tokio.run();
 }
