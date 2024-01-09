@@ -3,5 +3,5 @@
 version = 3
 
 [[package]]
-name = "my-rust-template"
+name = "mini-tokio"
 version = "0.1.0"
