@@ -1,44 +1,44 @@
-use std::collections::VecDeque;
 use std::future::Future;
-use std::pin::Pin;
-use std::task::Context;
-
-use futures::task;
+use std::sync::{mpsc, Arc};
 
 mod delay;
+mod task;
 
 pub use delay::Delay;
+pub use task::Task;
 
-#[derive(Default)]
 pub struct MiniTokio {
-    tasks: VecDeque<Task>,
+    scheduled: mpsc::Receiver<Arc<Task>>,
+    sender: mpsc::Sender<Arc<Task>>,
 }
 
-pub type Task = Pin<Box<dyn Future<Output = ()> + Send>>;
-
 impl MiniTokio {
-    pub fn new() -> MiniTokio {
-        Default::default()
+    /// Initialize a new mini-tokio instance.
+    pub fn new() -> Self {
+        let (sender, scheduled) = mpsc::channel();
+        Self { scheduled, sender }
     }
 
     /// Spawn a future onto the mini-tokio instance.
+    ///
+    /// The given future is wrapped with the `Task` harness and pushed into the
+    /// `scheduled` queue. The future will be executed when `run` is called.
     pub fn spawn<F>(&mut self, future: F)
     where
         F: Future<Output = ()> + Send + 'static,
     {
-        self.tasks.push_back(Box::pin(future));
+        Task::spawn(future, &self.sender);
     }
 
     pub fn run(&mut self) {
-        let waker = task::noop_waker();
-        let mut cx = Context::from_waker(&waker);
-
-        // `poll` each tasks continuously, which will waste our CPU
-        while let Some(mut task) = self.tasks.pop_front() {
-            // we want to only `poll` the tasks that are able to make progress
-            if task.as_mut().poll(&mut cx).is_pending() {
-                self.tasks.push_back(task);
-            }
+        while let Ok(task) = self.scheduled.recv() {
+            task.poll();
         }
+    }
+}
+
+impl Default for MiniTokio {
+    fn default() -> Self {
+        Self::new()
     }
 }
