@@ -33,7 +33,9 @@ impl MiniTokio {
         let waker = task::noop_waker();
         let mut cx = Context::from_waker(&waker);
 
+        // `poll` each tasks continuously, which will waste our CPU
         while let Some(mut task) = self.tasks.pop_front() {
+            // we want to only `poll` the tasks that are able to make progress
             if task.as_mut().poll(&mut cx).is_pending() {
                 self.tasks.push_back(task);
             }

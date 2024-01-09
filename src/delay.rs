@@ -3,6 +3,7 @@ use std::pin::Pin;
 use std::task::{Context, Poll};
 use std::time::{Duration, Instant};
 
+/// An async object, which is represented as a state machine
 pub struct Delay {
     when: Instant,
 }
