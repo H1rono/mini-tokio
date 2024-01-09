@@ -1,5 +1,5 @@
 {
-  description = "My template repository of rust project";
+  description = "https://tokio.rs/tokio/tutorial/async";
 
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/release-23.11";
