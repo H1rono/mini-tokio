@@ -2,9 +2,11 @@ use std::future::Future;
 use std::sync::{mpsc, Arc};
 
 mod delay;
+mod notify;
 mod task;
 
 pub use delay::Delay;
+pub use notify::Notify;
 pub use task::Task;
 
 pub struct MiniTokio {
