@@ -1,6 +1,7 @@
 use std::future::Future;
 use std::pin::Pin;
 use std::task::{Context, Poll};
+use std::thread;
 use std::time::{Duration, Instant};
 
 /// An async object, which is represented as a state machine
@@ -27,8 +28,21 @@ impl Future for Delay {
             println!("Hello world");
             Poll::Ready("done")
         } else {
-            // Ignore this line for now.
-            cx.waker().wake_by_ref();
+            // Get a handle to the waker for the current task
+            let waker = cx.waker().clone();
+            let when = self.when;
+
+            // Spawn a timer thread.
+            thread::spawn(move || {
+                // `wake`-up waker after this future get ready to make transition.
+                let now = Instant::now();
+
+                if now < when {
+                    thread::sleep(when - now);
+                }
+
+                waker.wake();
+            });
             Poll::Pending
         }
     }
